@@ -1,32 +1,35 @@
 /**
  * Sample React Native App
  * https://github.com/facebook/react-native
- * @flow
  */
 
-import React, { Component } from 'react';
+import React, {
+  Component,
+} from 'react';
 import {
   AppRegistry,
+  Image,
+  ListView,
   StyleSheet,
   Text,
   View,
-  Image
 } from 'react-native';
 
 var REQUEST_URL = 'https://raw.githubusercontent.com/facebook/react-native/master/docs/MoviesExample.json';
 
-var MOCKED_MOVIES_DATA = [
-  {title: 'Title', year: '2015', posters: {thumbnail: 'https://imgsv.imaging.nikon.com/lineup/lens/zoom/normalzoom/af-s_dx_18-140mmf_35-56g_ed_vr/img/sample/sample1_l.jpg'}},
-  {title: 'Some Movie', year: '2016', posters: {thumbnail: 'https://rescuethepresent.net/tomandjerry/files/2016/09/free-movie-film-poster-the_dark_knight_movie_poster.jpg'}}
-];
-
-export default class AwesomeProject extends Component {
-
+class AwesomeProject extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      movies: null,
+      dataSource: new ListView.DataSource({
+        rowHasChanged: (row1, row2) => row1 !== row2,
+      }),
+      loaded: false,
     };
+  }
+
+  componentDidMount() {
+    this.fetchData();
   }
 
   fetchData() {
@@ -34,23 +37,25 @@ export default class AwesomeProject extends Component {
       .then((response) => response.json())
       .then((responseData) => {
         this.setState({
-          movies: responseData.movies,
+          dataSource: this.state.dataSource.cloneWithRows(responseData.movies),
+          loaded: true,
         });
       })
       .done();
   }
 
-  componentDidMount() {
-    this.fetchData();
-  }
-
   render() {
-    if (!this.state.movies) {
+    if (!this.state.loaded) {
       return this.renderLoadingView();
     }
 
-    var movie = this.state.movies[0];
-    return this.renderMovie(movie);
+    return (
+      <ListView
+        dataSource={this.state.dataSource}
+        renderRow={this.renderMovie}
+        style={styles.listView}
+      />
+    );
   }
 
   renderLoadingView() {
@@ -77,10 +82,9 @@ export default class AwesomeProject extends Component {
       </View>
     );
   }
-
 }
 
-const styles = StyleSheet.create({
+var styles = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: 'row',
@@ -102,6 +106,10 @@ const styles = StyleSheet.create({
   thumbnail: {
     width: 53,
     height: 81,
+  },
+  listView: {
+    paddingTop: 20,
+    backgroundColor: '#F5FCFF',
   },
 });
 
